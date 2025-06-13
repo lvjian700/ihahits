@@ -7,7 +7,8 @@ module.exports = {
         'color-title': '#1E3A5F',
         'color-subtitle': '#2D4A6D',
         'color-text': '#4A5568',
-        'color-text-light': '#718096'
+        'color-text-light': '#718096',
+        'color-background': '#FCF7EE'
       },
       fontFamily: {
         sans: ['Inter var', 'ui-sans-serif', 'system-ui', 'sans-serif'],
