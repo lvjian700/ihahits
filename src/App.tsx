@@ -23,6 +23,9 @@ const SUGGESTIONS = [
 
 const App: React.FC = () => {
   const [habits, setHabits] = useLocalStorage<Habit[]>('habitTrackerData', []);
+  // Split habits into active and archived
+  const activeHabits = habits.filter(h => !h.archived);
+  const archivedHabits = habits.filter(h => h.archived);
   const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null);
   
   // Use the visibility refresh hook to handle date changes when tab becomes active
@@ -45,6 +48,7 @@ const App: React.FC = () => {
     setHabits(prev =>
       prev.map(h => {
         if (h.id === habitId) {
+          if (h.archived) return h; // prevent toggling archived habits
           const updatedLogs = { ...h.logs, [dateStr]: !h.logs[dateStr] };
           return { ...h, logs: updatedLogs };
         }
@@ -71,8 +75,19 @@ const App: React.FC = () => {
         <div className="relative max-w-4xl mx-auto">
           {/* Grid view of habits */}
           <HabitsDndGrid
-            habits={habits}
-            onReorder={setHabits}
+            habits={activeHabits}
+            onReorder={newActive => {
+              // Maintain order only within active habits
+              const newOrderIds = newActive.map(h => h.id);
+              const reordered = [...habits].sort((a,b)=>{
+                const ai = newOrderIds.indexOf(a.id);
+                const bi = newOrderIds.indexOf(b.id);
+                if(ai===-1) return 1; // archived stay at bottom
+                if(bi===-1) return -1;
+                return ai - bi;
+              });
+              setHabits(reordered);
+            }}
             onToggle={(habitId) =>
               toggleLog(
                 habitId,
@@ -99,6 +114,30 @@ const App: React.FC = () => {
               />
             )}
           </Modal>
+        </div>
+      )}
+      {archivedHabits.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold text-gray-700 mb-4">Archived Habits</h2>
+          <div className="space-y-3">
+            {archivedHabits.map(h => {
+              const completedDays = h.logs ? Object.values(h.logs).filter(Boolean).length : 0;
+              return (
+                <div key={h.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-3xl">{h.icon}</span>
+                    <div>
+                      <p className="font-medium text-gray-800">{h.name}</p>
+                      <p className="text-sm text-gray-600">Completed Days: {completedDays}</p>
+                    </div>
+                  </div>
+                  <button className="px-3 py-1.5 rounded-md bg-gray-100 text-gray-500 cursor-not-allowed" disabled>
+                    Resume
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       </div>

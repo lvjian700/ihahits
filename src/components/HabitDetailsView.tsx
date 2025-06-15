@@ -20,7 +20,8 @@ const DropdownMenu: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onCloseModal: () => void;
-}> = ({ buttonRef, isOpen, onClose, onCloseModal }) => {
+  onArchive: () => void;
+}> = ({ buttonRef, isOpen, onClose, onCloseModal, onArchive }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const [isVisible, setIsVisible] = useState(false);
@@ -62,7 +63,7 @@ const DropdownMenu: React.FC<{
   return ReactDOM.createPortal(
     <div 
       ref={menuRef}
-      className="fixed py-1 w-36 bg-white rounded-md shadow-lg z-50 border-l border-b border-gray-200 transition-opacity duration-150"
+      className="fixed py-1 w-40 bg-white rounded-md shadow-lg z-50 border border-gray-200 transition-opacity duration-150"
       style={{ 
         top: `${position.top}px`, 
         left: `${position.left}px`,
@@ -70,7 +71,15 @@ const DropdownMenu: React.FC<{
         pointerEvents: isVisible ? 'auto' : 'none'
       }}
     >
-
+      <button 
+        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+        onClick={() => {
+          onClose();
+          onArchive();
+        }}
+      >
+        Archive
+      </button>
       <button 
         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
         onClick={() => {
@@ -87,6 +96,15 @@ const DropdownMenu: React.FC<{
 };
 
 const HabitDetailsView: React.FC<HabitDetailsViewProps> = ({ habit, onToggle, onClose, onEditHabit }) => {
+  const handleArchive = () => {
+    if (window.confirm('Archive this habit? You can resume it later from the archived list.')) {
+      if (onEditHabit) {
+        onEditHabit(habit.id, { archived: true });
+      }
+      onClose();
+    }
+  };
+  
   const [menuOpen, setMenuOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [editingIcon, setEditingIcon] = useState(false);
@@ -180,6 +198,7 @@ const HabitDetailsView: React.FC<HabitDetailsViewProps> = ({ habit, onToggle, on
             isOpen={menuOpen}
             onClose={() => setMenuOpen(false)}
             onCloseModal={onClose}
+            onArchive={handleArchive}
           />
         </div>
       </div>
